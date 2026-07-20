@@ -10,7 +10,7 @@ import json, subprocess, sys
 
 from snow.theme_manager import get_manager
 
-PROJECT_DIR = Path(__file__).parent.parent
+from snow.paths import PROJECT_DIR
 CONFIG_DIR = PROJECT_DIR / "config"
 DATA_DIR = PROJECT_DIR / "data"
 

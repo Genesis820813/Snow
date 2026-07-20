@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 
-PROJECT_DIR = Path(__file__).parent.parent.parent
+from snow.paths import PROJECT_DIR
 LOG_FILE = PROJECT_DIR / "data" / "work_log.json"
 
 

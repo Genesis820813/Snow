@@ -2,7 +2,7 @@
 import json, time
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent.parent
+from snow.paths import PROJECT_DIR
 
 # Import original hotsearch module from V2
 import sys

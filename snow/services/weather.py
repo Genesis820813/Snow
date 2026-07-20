@@ -2,7 +2,7 @@
 import json, time, urllib.request, ssl, urllib.parse
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent.parent
+from snow.paths import PROJECT_DIR
 
 
 def get_weather() -> dict:

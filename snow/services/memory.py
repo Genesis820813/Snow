@@ -2,7 +2,7 @@
 import json, os, time
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent.parent
+from snow.paths import PROJECT_DIR
 MEMORY_FILE = PROJECT_DIR / "data" / "memory.json"
 
 

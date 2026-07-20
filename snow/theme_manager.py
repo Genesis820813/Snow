@@ -7,7 +7,7 @@
 import json
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent
+from snow.paths import PROJECT_DIR
 THEMES_DIR = PROJECT_DIR / "themes" / "installed"
 
 _instance = None

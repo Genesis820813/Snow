@@ -1,7 +1,7 @@
 """Snow prompt builder — reads from prompts/ directory files."""
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent
+from snow.paths import PROJECT_DIR
 PROMPTS_DIR = PROJECT_DIR / "prompts"
 
 

@@ -2,7 +2,7 @@
 import json, os, threading
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).parent.parent.parent
+from snow.paths import PROJECT_DIR
 TODOS_FILE = PROJECT_DIR / "data" / "todos.json"
 _lock = threading.Lock()
 

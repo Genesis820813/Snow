@@ -57,10 +57,14 @@ def _init_appdata():
         if src.exists() and not dst.exists():
             shutil.copy2(src, dst)
 
-    # 强制清除可能残留的 key.txt（旧版本打包 Bug）
-    stale_key = config_dst / 'key.txt'
-    if stale_key.exists():
-        stale_key.unlink()
+    # 仅在首次迁移时清除旧版本可能泄露的 key.txt
+    # 用 .snow_first_boot 标记判断是否首次启动
+    first_boot_marker = proj / '.snow_first_boot'
+    if not first_boot_marker.exists():
+        stale_key = config_dst / 'key.txt'
+        if stale_key.exists():
+            stale_key.unlink()
+        first_boot_marker.write_text('1')
 
     data_dst = proj / 'data'
     data_dst.mkdir(parents=True, exist_ok=True)

@@ -57,6 +57,11 @@ def _init_appdata():
         if src.exists() and not dst.exists():
             shutil.copy2(src, dst)
 
+    # 强制清除可能残留的 key.txt（旧版本打包 Bug）
+    stale_key = config_dst / 'key.txt'
+    if stale_key.exists():
+        stale_key.unlink()
+
     data_dst = proj / 'data'
     data_dst.mkdir(parents=True, exist_ok=True)
 

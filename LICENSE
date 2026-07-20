@@ -1,4 +1,4 @@
-MIT License
+MIT License with Additional Restrictions
 
 Copyright (c) 2026 Genesis820813
 
@@ -9,8 +9,20 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+2. Any modified versions, derivative works, or redistributions must clearly
+   and prominently indicate that they are based on or derived from "Snow"
+   (https://github.com/Genesis820813/Snow), in a location visible to end users
+   (e.g., README, About dialog, or documentation).
+
+3. The Software may NOT be used, copied, modified, merged, published,
+   distributed, sublicensed, or sold by Anthropic PBC, its subsidiaries,
+   affiliates, or any person acting as an employee, contractor, or agent of
+   Anthropic PBC. This restriction applies regardless of the purpose (commercial
+   or non-commercial) and regardless of whether the Software is used directly or
+   as part of a larger work.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

@@ -1,0 +1,42 @@
+{
+  "mode": "default",
+  "_layout": {
+    "card_w": 260, "card_h": 380,
+    "left_x": null, "left_y": "auto_bottom",
+    "right_x": "auto_right", "right_y": "auto_bottom"
+  },
+  "background": {
+    "top": "#7a8f9e",
+    "bottom": "#58695e",
+    "split_ratio": 0.4
+  },
+  "glass_card": {
+    "bg": "rgba(255,255,255,0.04)",
+    "border": "rgba(255,255,255,0.06)",
+    "radius": 14
+  },
+  "left_card": {
+    "weather_text": "rgba(200,220,210,0.85)",
+    "news_text": "rgba(180,200,190,0.75)"
+  },
+  "right_card": {
+    "ai_work_text": "rgba(100,200,160,0.80)",
+    "todo_text": "rgba(200,200,200,0.80)"
+  },
+  "world_panel": {
+    "btn_bg": "rgba(22,22,40,0.9)",
+    "btn_text": "rgba(255,255,255,0.7)",
+    "icon_bg": "rgba(22,22,40,0.9)",
+    "icon_text": "rgba(255,255,255,0.5)"
+  },
+  "settings": {},
+  "logo": {
+    "visible": true
+  },
+  "close_button": {
+    "bg": "rgba(255,255,255,0.05)",
+    "text": "rgba(255,255,255,0.20)",
+    "hover_bg": "rgba(220,50,50,0.3)",
+    "hover_text": "#ffffff"
+  }
+}

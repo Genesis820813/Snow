@@ -1,0 +1,11 @@
+# Snow 运行依赖
+# 安装: pip install -r requirements.txt
+# Python 3.10+ (开发环境 3.11)
+
+PySide6>=6.6          # UI 框架（含 QtWebEngine、QtMultimedia）
+pywin32>=306          # Windows COM（快捷方式解析、桌面扫描）
+edge-tts>=6.1         # 微软 Edge 在线语音合成
+psutil>=5.9           # 系统状态监控
+Pillow>=10.0          # 截图
+python-docx>=1.1      # Word 文档读写
+openpyxl>=3.1         # Excel 读写

@@ -1,0 +1,288 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;font-family:'Source Han Sans SC','Noto Sans SC','Microsoft YaHei',sans-serif;background:transparent}
+
+.cinema{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:4;
+  width:min(740px, calc(100vw - 40px));max-height:calc(100vh - 150px);
+  background:rgba(0,0,0,0.18);border-radius:12px;padding:14px 18px;
+  font-size:14px;line-height:1.7;overflow-y:auto;overflow-x:hidden;
+  opacity:0;transition:opacity .4s;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent}
+.cinema::-webkit-scrollbar{width:4px}
+.cinema::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:2px}
+.cinema.active{opacity:1}
+
+.msg{margin:4px 0;padding:2px 0}
+.msg.user{text-align:right;color:rgba(180,210,200,0.75)}
+.msg.ai{text-align:left;color:rgba(255,255,255,0.78)}
+.msg.attach{text-align:right;color:rgba(200,220,160,0.7);font-size:12px}
+
+}
+}
+</style></head><body>
+
+<div class="cinema" id="cinema"></div>
+
+<script src="qwebchannel.js"></script>
+<script>
+var snow = null;
+var hadSentence = false;
+var currentAiDiv = null;
+var pickedContents = [];
+
+var _bridgeRetries = 0;
+var _bridgeMaxRetries = 20;
+var _bridgeAlive = false;
+var _pendingMsg = null;
+var _lastPing = 0;
+function initBridge(){
+  try{
+    if(typeof QWebChannel !== 'undefined' && typeof qt !== 'undefined' && qt.webChannelTransport){
+      new QWebChannel(qt.webChannelTransport, function(ch){
+        snow = ch.objects.snow;
+        _bridgeAlive = true;
+        _bridgeRetries = 0;
+        _lastPing = Date.now();
+        onBridgeReady();
+        if(_pendingMsg){
+          var m = _pendingMsg; _pendingMsg = null;
+          snow.ask(m);
+        }
+      });
+      return;
+    }
+  }catch(e){}
+  _bridgeRetries++;
+  if(_bridgeRetries >= _bridgeMaxRetries){
+    _bridgeAlive = false;
+    var cinema = document.getElementById('cinema');
+    if(cinema){
+      if(!cinema.classList.contains('active')) cinema.classList.add('active');
+      var div = document.createElement('div');
+      div.className = 'msg ai'; div.style.opacity = '0.6'; div.style.color = 'rgba(255,100,100,0.8)';
+      div.textContent = '⚠ 连接失败 — 请重启 Snow';
+      cinema.appendChild(div);
+    }
+    return;
+  }
+  setTimeout(initBridge, 300);
+}
+function _ensureBridge(){
+  if(!snow || !_bridgeAlive){
+    _bridgeRetries = 0;
+    _bridgeAlive = false;
+    initBridge();
+    return false;
+  }
+  _lastPing = Date.now();
+  return true;
+}
+initBridge();
+// 心跳
+setInterval(function(){
+  if(!snow || !_bridgeAlive){
+    if(_bridgeRetries >= _bridgeMaxRetries){
+      _bridgeRetries = 0;
+      initBridge();
+    }
+  }
+}, 15000);
+
+function cleanMarkdown(s) {
+  return s.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1')
+    .replace(/#{1,6}\s/g,'').replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .replace(/`{1,3}(.+?)`{1,3}/g,'$1');
+}
+
+function onBridgeReady(){
+  var cinema = document.getElementById('cinema');
+
+  snow.ai_token.connect(function(t){
+    t = cleanMarkdown(t);
+    if(!cinema.classList.contains('active')) cinema.classList.add('active');
+    if(!currentAiDiv){
+      currentAiDiv = document.createElement('div');
+      currentAiDiv.className = 'msg ai';
+      cinema.appendChild(currentAiDiv);
+    }
+    currentAiDiv.textContent += t;
+    cinema.scrollTop = cinema.scrollHeight;
+  });
+
+  snow.ai_done.connect(function(full){
+    currentAiDiv = null;
+    full = cleanMarkdown(full || '');
+    if(full && full.trim()) snow.speak(full);
+  });
+
+  snow.ai_sentence.connect(function(sentence){
+    // 流式显示但不朗读，避免和对话框重复
+  });
+
+  snow.ai_error.connect(function(err){
+    currentAiDiv = null;
+    if(!cinema.classList.contains('active')) cinema.classList.add('active');
+    var div = document.createElement('div');
+    div.className = 'msg ai'; div.style.opacity = '0.5';
+    div.textContent = '错误: ' + err;
+    cinema.appendChild(div);
+  });
+
+  snow.state_changed.connect(function(json){
+    var state = JSON.parse(json);
+    var tb = document.getElementById('ttsBtn');
+    if(!tb) return;
+    if(state.tts){ tb.style.background='rgba(100,180,160,0.35)'; tb.style.boxShadow='0 0 10px rgba(100,180,160,0.25)'; tb.style.color='rgba(200,240,220,0.85)'; }
+    else{ tb.style.background='rgba(255,255,255,0.06)'; tb.style.boxShadow=''; tb.style.color='rgba(255,255,255,0.4)'; }
+  });
+
+  // ASR 状态指示
+
+  injectChatBar();
+}
+
+function showAttach(name) {
+  var cinema = document.getElementById('cinema');
+  if(!cinema.classList.contains('active')) cinema.classList.add('active');
+  var div = document.createElement('div');
+  div.className = 'msg attach';
+  div.textContent = '📎 ' + name;
+  cinema.appendChild(div);
+  cinema.scrollTop = cinema.scrollHeight;
+}
+
+function injectChatBar(){
+  var bar = document.createElement('div');
+  bar.id = 'chatBar';
+  bar.style.cssText = 'position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;'+
+    'display:flex;align-items:center;gap:8px;'+
+    'background:rgba(18,18,32,0.75);border-radius:28px;padding:6px 10px 6px 14px;'+
+    'border:1px solid rgba(255,255,255,0.07);'+
+    'box-shadow:0 20px 60px rgba(0,0,0,0.5),0 4px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04);'+
+    'transition:transform .3s cubic-bezier(.25,.8,.25,1.4)';
+  bar.onmouseenter = function(){ this.style.transform='translateX(-50%) translateY(-3px)'; };
+  bar.onmouseleave = function(){ this.style.transform='translateX(-50%) translateY(0)'; };
+
+  function mkBtn(id, text, title){
+    var b = document.createElement('button');
+    b.id = id; b.textContent = text; b.title = title||'';
+    b.style.cssText = 'width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;'+
+      'display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;'+
+      'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);transition:all .25s';
+    b.onmouseenter = function(){ this.style.background='rgba(255,255,255,0.16)'; this.style.color='#fff'; };
+    b.onmouseleave = function(){ this.style.background='rgba(255,255,255,0.06)'; this.style.color='rgba(255,255,255,0.4)'; };
+    return b;
+  }
+
+  var inp = document.createElement('input');
+  inp.id = 'chatInput';
+  inp.placeholder = '输入文字，或按空格键说话...';
+  inp.style.cssText = 'background:transparent;border:none;outline:none;color:rgba(255,255,255,0.75);'+
+    'font-size:13px;width:min(300px, 38vw);height:34px;font-family:inherit;padding:0 6px;flex-shrink:1';
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sendMessage(); });
+
+  var addBtn = mkBtn('addBtn', '＋', '添加文件');
+  var settingsBtn = mkBtn('settingsBtn', '⚙', '设置');
+  var ttsBtn = mkBtn('ttsBtn', '🎧', '语音');
+  var sendBtn = mkBtn('sendBtn', '→', '发送');
+  var cinemaBtn = mkBtn('cinemaToggle', '字幕', '字幕');
+
+  // ── 文件选择：走 PySide6 原生对话框（避免 QWebChannel 传二进制数据损坏）──
+  addBtn.addEventListener('click', function(){
+    if(snow && snow.pick_file) snow.pick_file();
+  });
+
+  // 接收 pick_file 结果
+  snow.file_picked.connect(function(data){
+    if(!data || !data.trim()) return;
+    var parts = data.split('\n---FILE_SEPARATOR---\n');
+    for(var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      if(p.startsWith('TEXT:')){
+        var nl = p.indexOf('\n');
+        var fname = p.substring(5, nl);
+        var content = p.substring(nl + 1);
+        showAttach(fname);
+        pickedContents.push({name: fname, content: content, isFile: false});
+      } else if(p.startsWith('FILE:')){
+        var fpath = p.substring(5);
+        var fname = fpath.split('\\').pop().split('/').pop();
+        showAttach(fname + ' 📁');
+        pickedContents.push({name: fname, content: fpath, isFile: true});
+      }
+    }
+  });
+
+  ttsBtn.style.background = 'rgba(100,180,160,0.35)';
+  ttsBtn.style.color = 'rgba(200,240,220,0.85)';
+  ttsBtn.style.boxShadow = '0 0 10px rgba(100,180,160,0.25)';
+  ttsBtn.addEventListener('click', function(){ if(snow && snow.toggle_tts) snow.toggle_tts(); });
+
+  sendBtn.style.background = 'rgba(100,180,160,0.3)';
+  sendBtn.style.color = 'rgba(220,240,230,0.85)';
+  sendBtn.addEventListener('click', sendMessage);
+
+  cinemaBtn.style.width = '44px'; cinemaBtn.style.borderRadius = '14px';
+  cinemaBtn.style.fontSize = '10px'; cinemaBtn.style.fontWeight = '600'; cinemaBtn.style.letterSpacing = '1px';
+  cinemaBtn.addEventListener('click', function(){
+    var c = document.getElementById('cinema');
+    c.style.display = (c.style.display === 'none') ? '' : 'none';
+    cinemaBtn.style.color = (c.style.display === 'none') ? 'rgba(255,80,80,0.5)' : 'rgba(255,255,255,0.7)';
+  });
+
+  settingsBtn.addEventListener('click', function(){ if(snow && snow.open_settings) snow.open_settings(); });
+
+  bar.appendChild(addBtn);
+  bar.appendChild(settingsBtn);
+  bar.appendChild(inp);
+  bar.appendChild(ttsBtn);
+  bar.appendChild(sendBtn);
+  bar.appendChild(cinemaBtn);
+  document.body.appendChild(bar);
+
+  // 自动聚焦输入框
+  setTimeout(function(){ inp.focus(); }, 500);
+}
+
+function sendMessage(){
+  var inp = document.getElementById('chatInput');
+  var text = inp.value.trim();
+  if(!text && !pickedContents.length) return;
+  inp.value = '';
+  hadSentence = false; currentAiDiv = null;
+
+  var cinema = document.getElementById('cinema');
+  if(!cinema.classList.contains('active')) cinema.classList.add('active');
+
+  // 显示用户消息
+  var udiv = document.createElement('div');
+  udiv.className = 'msg user';
+  udiv.textContent = text || '(发送文件)';
+  cinema.appendChild(udiv);
+  cinema.scrollTop = cinema.scrollHeight;
+
+  // 组装完整消息
+  var fullMsg = text || '请帮我分析上传的文件';
+  if(pickedContents.length){
+    fullMsg += '\n\n══════════════════════════════════════';
+    fullMsg += '\n⚠ 用户上传了 ' + pickedContents.length + ' 个文件。';
+    for(var i = 0; i < pickedContents.length; i++){
+      var f = pickedContents[i];
+      if(f.isFile){
+        fullMsg += '\n\n📁 二进制文件已保存到: ' + f.content;
+        fullMsg += '\n请用 read_file 或 PowerShell 提取正文（.docx 可用 python-docx 或 PowerShell）。';
+      } else {
+        fullMsg += '\n\n┌── 文件: ' + f.name;
+        fullMsg += '\n│' + f.content.replace(/\n/g, '\n│');
+        fullMsg += '\n└── 文件结束';
+      }
+    }
+    fullMsg += '\n══════════════════════════════════════';
+    pickedContents = [];
+  }
+
+  if(!_ensureBridge()){ inp.placeholder='重连中...'; _pendingMsg = fullMsg; return; }
+  snow.ask(fullMsg);
+}
+</script>
+</body></html>

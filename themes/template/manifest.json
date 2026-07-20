@@ -1,0 +1,22 @@
+{
+  "name": "{{THEME_ID}}",
+  "label": "{{THEME_LABEL}}",
+  "version": "1.0",
+  "protocol": "1.0",
+  "author": "{{AUTHOR}}",
+  "description": "{{DESCRIPTION}}",
+  "entry": "index.html",
+  "requires": [
+    "ask", "get_weather", "get_hotsearch", "get_todos", "add_todo",
+    "toggle_todo", "remove_todo", "speak", "toggle_tts", "get_voice",
+    "get_voices", "set_voice", "get_model_config", "switch_model",
+    "get_apps", "launch_app", "close_world", "toggle_world",
+    "get_work_log", "record_work", "get_system_stats", "open_settings",
+    "pick_file", "save_uploaded_file", "exit_snow", "get_ui_list", "switch_ui"
+  ],
+  "signals": [
+    "ai_token", "ai_done", "ai_error", "ai_sentence", "ai_work",
+    "state_changed", "todos_changed", "world_closed", "world_show", "world_toggle"
+  ],
+  "capabilities": ["chat", "weather", "news", "todo", "tts", "model", "world", "work", "system", "ui"]
+}

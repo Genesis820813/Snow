@@ -1,0 +1,27 @@
+{
+  "mode": "chat_only",
+  "_layout": {
+    "card_w": 0, "card_h": 0,
+    "left_x": 0, "left_y": 0,
+    "right_x": 0, "right_y": 0
+  },
+  "background": {
+    "top": "transparent",
+    "bottom": "transparent",
+    "split_ratio": 0.4
+  },
+  "glass_card": {},
+  "left_card": {},
+  "right_card": {},
+  "world_panel": {},
+  "settings": {},
+  "logo": {
+    "visible": false
+  },
+  "close_button": {
+    "bg": "rgba(255,255,255,0.05)",
+    "text": "rgba(255,255,255,0.20)",
+    "hover_bg": "rgba(220,50,50,0.3)",
+    "hover_text": "#ffffff"
+  }
+}

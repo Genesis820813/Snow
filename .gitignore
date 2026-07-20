@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# 日志
+diag.log
+stdout.log
+stderr.log
+crash.log
+console.log
+
+# API Key（绝对不能提交）
+config/key.txt
+
+# 运行时数据缓存
+data/*.json
+data/*.txt
+
+# 构建产物
+build/
+dist/
+installer/
+*.spec
+
+# 音频临时文件
+*.wav
+*.mp3

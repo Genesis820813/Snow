@@ -1,0 +1,162 @@
+## 桌面整理
+用户说「整理桌面」时：
+1. 扫描桌面上所有非快捷方式的文件
+2. 按今天的日期创建文件夹
+3. 将所有散乱文件移入该文件夹
+4. 不要移动 .lnk 快捷方式和已有文件夹
+
+⚠ Snow自身的文件禁止移动！
+
+## 世界面板流程
+用户说「打开世界」时：
+第1步: 调用 desktop_summary 获取桌面所有项目（快捷方式+特殊项目+文件夹，自带分类和目标路径）
+第2步: 桌面散文件已包含在返回数据中；个别缺 target 的快捷方式可用 resolve_shortcut 补齐
+第3步: 组装数据 {apps:[{name,target}], files:[{name,target}]}
+第4步: 调用 show_world_icons 渲染
+
+用户说「关闭世界」时：调 toggle_world 隐藏面板。
+
+## 天气城市
+天气默认按 IP 自动定位（用户挂代理时会漂到国外）。用户说天气城市不对或想固定城市时：
+用 write_file 把城市名（拼音或英文，如 Shenzhen、Beijing）写入 data/city.txt 即可固定；
+删除 data/city.txt 则恢复自动定位。改完告知用户天气会在10分钟缓存过期后刷新。
+
+## 创建新主题（⚠ 必须严格按此流程，一步不能跳）
+
+当用户要求「创建新主题」「做一个XX主题」时，按以下步骤操作：
+
+### 第1步：确定主题 ID
+- 英文 ID：小写+连字符（如 wizard-of-oz, cyber-neon）
+- 中文标签：简短有辨识度
+- 目标目录：themes/installed/<主题ID>/
+
+### 第2步：复制模板文件（绝对不要自己写 JS）
+- 复制 themes/template/index.html → themes/installed/<ID>/index.html
+- 复制 themes/template/qwebchannel.js → themes/installed/<ID>/qwebchannel.js
+- ⚠ index.html 里的 <script> 标签一个字不能动！那是 Snow 的神经系统。
+
+### 第3步：填 CSS（只改 <style> 标签内的 {{VARIABLE}} 占位符）
+- 把所有 {{CINEMA_BG}} {{USER_TEXT}} {{AI_TEXT}} {{BAR_BG}} ... 替换为具体颜色值
+- CSS 颜色必须符合主题风格
+- ⚠ 只替换 {{VARIABLE}} 占位符，不要删除任何 CSS 规则
+
+### 第4步：创建 panel.json（Qt 层配色）
+- 参考 themes/installed/cute-kawaii/panel.json 的结构
+- 必须覆盖 6 个固定 section：glass_card, left_card, right_card, world_panel, settings, close_button
+  （每个 section 的 key 不能多也不能少 — 参考模板 theme_schema.json）
+- 🎨 background 和 logo 两个 section 完全自由发挥，key 不限，尽情创造
+- ⚠ 最后一个 key 后面不能有逗号（JSON 不允许多余逗号）
+
+### 第5步：创建 manifest.json
+- name: 同主题 ID
+- label: 中文标签
+- entry: "index.html"
+- requires/signals/capabilities 照抄模板 themes/template/manifest.json
+
+### 第6步：加载主题
+- 调用 switch_ui("<主题ID>") 切换到新主题
+
+### 禁止事项
+- ❌ 绝对禁止自己写 index.html 的 JavaScript 部分
+- ❌ 绝对禁止从其他已安装主题复制（每个主题是独立个体）
+- ❌ 禁止跳过任何步骤
+- ❌ panel.json 禁止有多余逗号
+
+当用户要求修改 Snow 的外观时，你必须只修改以下两个文件之一，绝不能动 Python 代码（logo.py, window.py 等）：
+
+### 文件1: panel.json（Qt 层 — 背景/卡片/世界面板/Logo/设置）
+路径: themes/installed/<当前主题>/panel.json
+所有组件自动读取此文件。
+⚠ 改完 panel.json 后必须调用 reload_theme 才能看到效果！
+
+🎨 改 Logo（完全自由发挥）：
+  → 文件: panel.json
+  → key: logo.* 下的任何 key 都可以改，也可以新增 key
+  → glyph 可以是任意字符/emoji/短词，font_size/width/height 任意数字
+  → 颜色、光晕、旋转、可见性均可自由调整
+
+🎨 改背景（完全自由发挥）：
+  → 文件: panel.json
+  → key: background.* 下的任何 key 都可以改，也可以新增 key
+  → 颜色格式: #RRGGBB 或 rgba(R,G,B,A)
+
+改世界面板按钮:
+  → 文件: panel.json
+  → key: world_panel.toggle_btn_bg, world_panel.toggle_btn_text, world_panel.icon_bg, world_panel.icon_text 等
+  → 格式: rgba(R,G,B,A) 或 #RRGGBB
+
+改左卡片（天气/热搜）:
+  → 文件: panel.json
+  → key: left_card.weather_temp, left_card.section_title, left_card.hotsearch_text 等
+
+改右卡片（AI工作/待办）:
+  → 文件: panel.json
+  → key: right_card.ai_work_primary, right_card.todo_normal, right_card.section_title 等
+
+### 文件2: index.html（HTML 层 — 对话框/输入栏/按钮）
+路径: themes/installed/<当前主题>/index.html
+⚠ 只能改 <style> 标签内的 CSS 颜色值，<script> 标签内一个字不能动。
+
+改对话框背景: → 改 .cinema 的 background
+改用户消息颜色: → 改 .msg.user 的 color
+改AI消息颜色: → 改 .msg.ai 的 color
+改输入栏: → 改 #chatBar 的 background/border/box-shadow
+改按钮颜色: → 改 injectChatBar 里 mkBtn 的 background/color
+
+### 禁止事项
+- ❌ 禁止修改 snow/widgets/logo.py 或任何 Python 文件
+- ❌ 禁止修改 <script> 标签内的任何代码
+- ❌ 禁止修改 themes/template/ 目录
+- ❌ 面板改了 panel.json 就会自动生效，不要试图调别的接口
+
+## 生成 PPT（guizang-ppt 技能）
+
+当用户说「做个PPT」「生成幻灯片」「做一个XX主题的演示文稿」时：
+
+### 风格选择
+- 人文/故事/杂志风 → 风格 A · 电子杂志风（template.html）
+- 科技/数据/极简 → 风格 B · 瑞士国际主义风（template-swiss.html）
+
+### 流程（严格按序）
+1. 先和用户确认：风格 A 还是 B？大概几页？有没有素材？
+2. 复制模板到目标位置：
+   - 风格 A: 复制 `ppt/assets/template.html`
+   - 风格 B: 复制 `ppt/assets/template-swiss.html`
+3. 替换模板里的 `[必填]` 标题占位符
+4. 在 `<!-- SLIDES_HERE -->` 处填充幻灯片内容
+5. 每页 slide 必须带 `light` / `dark` / `hero light` / `hero dark` 主题类
+6. 参考 `ppt/references/layouts.md`（风格A）或 `ppt/references/layouts-swiss.md`（风格B）选取布局
+7. 输出到用户桌面或指定位置，命名为 `XXX.html`
+
+### 禁止
+- ❌ 不要自己发明 CSS 类名——只用模板里已有的
+- ❌ 不要修改模板的 <script> 标签
+- ❌ 风格 A 和 B 的类名不能混用
+
+## UI/UX 设计咨询（ui-ux-pro-max 技能）
+
+当用户问「什么风格适合XX」「推荐配色」「用什么字体」「XX产品怎么设计」等 UI/UX 问题时：
+
+### 搜索命令
+```bash
+python ui-ux-pro-max/scripts/search.py "<关键词>" --domain <领域> [-n <数量>]
+```
+
+### 可搜索领域
+| 领域 | 用途 |
+|------|------|
+| style | UI 风格推荐（glassmorphism, brutalism 等 50+） |
+| color | 配色方案（161 套，按产品类型） |
+| typography | 字体配对（57 组，含 Google Fonts 导入） |
+| product | 产品类型建议（SaaS, 电商, 后台等） |
+| landing | 落地页结构和 CTA 策略 |
+| chart | 图表类型和库推荐（25 种） |
+| ux | UX 最佳实践和反模式（99 条） |
+
+### 技术栈（--stack）
+html-tailwind / react / nextjs / vue / svelte / swiftui / flutter / shadcn / jetpack-compose
+
+### 流程
+1. 用户提 UI/UX 需求 → 先搜索对应领域获取推荐
+2. 用搜索结果指导 HTML/CSS 设计决策
+3. 给出具体 CSS 变量和实现清单

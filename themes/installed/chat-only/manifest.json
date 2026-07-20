@@ -1,0 +1,28 @@
+{
+  "name": "chat-only",
+  "label": "纯对话 · Chat Only",
+  "version": "1.0",
+  "protocol": "1.0",
+  "author": "Snow Team",
+  "description": "极简纯对话主题 — 桌面只留一个对话框，无卡片、无面板、无干扰",
+  "entry": "index.html",
+  "requires": [
+    "ask",
+    "speak",
+    "toggle_tts",
+    "open_settings",
+    "pick_file",
+    "save_uploaded_file",
+    "exit_snow",
+    "get_ui_list",
+    "switch_ui"
+  ],
+  "signals": [
+    "ai_token",
+    "ai_done",
+    "ai_error",
+    "state_changed",
+    "file_picked"
+  ],
+  "capabilities": ["chat", "tts", "ui"]
+}
